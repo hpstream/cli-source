@@ -29,6 +29,7 @@
     "imagemin-jpegtran": "^7.0.0",
     "imagemin-optipng": "^8.0.0",
     "imagemin-svgo": "^10.0.1",
+    "lerna": "^4.0.0",
     "lodash": "^4.17.21",
     "postcss": "^8.4.5",
     "rollup": "^2.61.1",
