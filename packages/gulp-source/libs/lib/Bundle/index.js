@@ -1,4 +1,23 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -6,7 +25,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var fs_1 = __importDefault(require("fs"));
 var path_1 = __importDefault(require("path"));
 var Module_1 = __importDefault(require("./../Module"));
-var magic_string_1 = require("magic-string");
+var magic_string_1 = __importStar(require("magic-string"));
 var Bundle = /** @class */ (function () {
     function Bundle(options) {
         // 处理兼容
@@ -18,11 +37,23 @@ var Bundle = /** @class */ (function () {
         var entryModule = this.fetchModule(this.entryPath);
         this.statements = entryModule.expandAllStatements(true);
         var code = this.generate().code;
-        console.log(code);
+        // console.log(code);
         fs_1.default.writeFileSync(fileName, code);
     };
-    Bundle.prototype.fetchModule = function (importee) {
-        var route = importee;
+    Bundle.prototype.fetchModule = function (importee, importer) {
+        // let route = importee;
+        var route;
+        if (!importer) {
+            route = importee;
+        }
+        else {
+            if (path_1.default.isAbsolute(importee)) {
+                route = importee;
+            }
+            else if (importee[0] == ".") {
+                route = path_1.default.resolve(path_1.default.dirname(importer), importee.replace(/\.js$/, "") + ".js");
+            }
+        }
         var code = fs_1.default.readFileSync(route, "utf8");
         var module = new Module_1.default({
             code: code,
@@ -37,10 +68,10 @@ var Bundle = /** @class */ (function () {
             var source = statement._source;
             if (source) {
                 // console.log(source, 1);
-                // magicString.addSource({
-                //   content: new MagicString(source),
-                //   // separator: "\n",
-                // });
+                magicString.addSource({
+                    content: new magic_string_1.default(source),
+                    // separator: "\n",
+                });
             }
         });
         return {
@@ -50,4 +81,3 @@ var Bundle = /** @class */ (function () {
     return Bundle;
 }());
 exports.default = Bundle;
-;
