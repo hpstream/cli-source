@@ -10,20 +10,24 @@ var object_1 = require("../utils/object");
 var Module = /** @class */ (function () {
     function Module(_a) {
         var code = _a.code, path = _a.path, bundle = _a.bundle;
-        // this.options = options;
+        //  code 存储文本
         this.code = new magic_string_1.default(code, {
             filename: path,
             indentExclusionRanges: [0, code.length],
         });
         this.path = path;
         this.bundle = bundle;
+        // 转化成ast
         this.ast = (0, acorn_1.parse)(code, {
             ecmaVersion: 7,
             sourceType: "module",
         });
-        this.imports = {}; // 存放导入的语句
-        this.exports = {}; // 存放导出的语句
-        this.definitions = {}; //此变量存放所有的变量定义的语句
+        // 存放导入的语句
+        this.imports = {};
+        // 存放导出的语句
+        this.exports = {};
+        //此变量存放所有的变量定义的语句
+        this.definitions = {};
         this.analyse();
     }
     Module.prototype.analyse = function () {
@@ -44,6 +48,7 @@ var Module = /** @class */ (function () {
             }
             else if (statement.type === "ExportNamedDeclaration") {
                 var declaration_1 = statement.declaration;
+                // 处理 export var age = 1; 的情况
                 if (declaration_1.type === "VariableDeclaration") {
                     var declarations = declaration_1.declarations;
                     declarations.forEach(function (variableDeclarator) {
@@ -56,6 +61,7 @@ var Module = /** @class */ (function () {
                         };
                     });
                 }
+                // 处理 export function sum(){}; 的情况
                 if (declaration_1.type === "FunctionDeclaration") {
                     var localName = declaration_1.id.name;
                     _this.exports[localName] = {
@@ -65,12 +71,14 @@ var Module = /** @class */ (function () {
                     };
                 }
             }
+            // console.log(this.exports);
         });
         (0, analyse_1.default)(this.ast, this.code, this);
         this.ast.body.forEach(function (statement) {
+            // console.log(statement._defines);
             Object.keys(statement._defines).forEach(function (name) {
                 //当前模块内 定义name这个变量的语句是statement
-                //main.js  type   let type = 'dog';
+                //main.js type let type = 'dog';
                 _this.definitions[name] = statement;
             });
         });
@@ -101,6 +109,7 @@ var Module = /** @class */ (function () {
             result.push.apply(result, definition);
         });
         result.push(statement);
+        // console.log(result);
         return result;
     };
     Module.prototype.define = function (name) {
@@ -109,6 +118,7 @@ var Module = /** @class */ (function () {
         if ((0, object_1.hasOwnProperty)(this.imports, name)) {
             //this.imports[localName]={localName,source,importName};
             var _a = this.imports[name], localName = _a.localName, source = _a.source, importName = _a.importName;
+            // console.log(name);
             // source .msg
             var importedModule = this.bundle.fetchModule(source, this.path);
             // console.log(importedModule.exports);
@@ -123,6 +133,7 @@ var Module = /** @class */ (function () {
                 return this.expandStatement(statement);
             }
             else {
+                // console.log(name,1)
                 return [];
             }
         }

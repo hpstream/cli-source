@@ -1,4 +1,5 @@
 export function sum(a, b) {
     return a + b;
 }
-sum(10, 5);
+export var c = 1;
+console.log(sum(2,c))

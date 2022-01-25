@@ -11,13 +11,16 @@ function analyse(ast, magicString, bundle) {
         return;
     // 1. 创建作用域
     var scope = new Scope_1.default({ name: "全局作用域" });
+    var onescope = scope;
     ast.body.forEach(function (statement) {
         function addToScope(name) {
             scope.add(name);
             if (!scope.parent) {
                 // 标记顶级变量
                 statement._defines[name] = true;
+                // console.log(statement._defines);
             }
+            // console.log(scope.parent);
         }
         Object.defineProperties(statement, {
             _defines: { value: {} },
@@ -45,7 +48,7 @@ function analyse(ast, magicString, bundle) {
                             break;
                         case "VariableDeclaration":
                             node.declarations.forEach(function (declaration) {
-                                return addToScope(declaration.id.name);
+                                addToScope(declaration.id.name);
                             });
                             break;
                     }
@@ -55,8 +58,15 @@ function analyse(ast, magicString, bundle) {
                     }
                 },
                 leave: function (node, parent) {
+                    // if (node.type == "VariableDeclaration"){
+                    //   console.log(scope);
+                    // }
+                    console.log(scope);
                     if (parent._scope) {
                         scope = parent._scope;
+                    }
+                    else {
+                        scope = onescope;
                     }
                 },
             });
@@ -68,8 +78,8 @@ function analyse(ast, magicString, bundle) {
                             var currentScope = node._scope || scope;
                             var definingScope = currentScope.findDefiningScope(node.name);
                             if (!definingScope) {
-                                // console.log(statement._dependsOn);
                                 //找这个statement依赖了哪些外部变量
+                                // console.log(statement);
                                 if (statement._dependsOn) {
                                     statement._dependsOn[node.name] = true;
                                 }

@@ -26,14 +26,15 @@ var fs_1 = __importDefault(require("fs"));
 var path_1 = __importDefault(require("path"));
 var Module_1 = __importDefault(require("./../Module"));
 var magic_string_1 = __importStar(require("magic-string"));
+// 相当于compile;管理器
 var Bundle = /** @class */ (function () {
     function Bundle(options) {
         // 处理兼容
         this.entryPath = path_1.default.resolve(options.entry.replace(/\.js/, "") + ".js");
-        this.module = {};
         this.statements = [];
     }
     Bundle.prototype.build = function (fileName) {
+        // 处理入口文件
         var entryModule = this.fetchModule(this.entryPath);
         this.statements = entryModule.expandAllStatements(true);
         var code = this.generate().code;
@@ -51,10 +52,12 @@ var Bundle = /** @class */ (function () {
                 route = importee;
             }
             else if (importee[0] == ".") {
+                // 处理深度文件，如：在主文件import了其他文件
                 route = path_1.default.resolve(path_1.default.dirname(importer), importee.replace(/\.js$/, "") + ".js");
             }
         }
         var code = fs_1.default.readFileSync(route, "utf8");
+        // 每个文件创建一个 module; 模块
         var module = new Module_1.default({
             code: code,
             path: importee,

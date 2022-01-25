@@ -10,13 +10,17 @@ function analyse(ast: AstNode, magicString: MagicString, bundle: Module) {
   if (!ast.body) return;
   // 1. 创建作用域
   let scope = new Scope({ name: "全局作用域" });
+  let onescope = scope;
   ast.body.forEach((statement) => {
     function addToScope(name: string) {
       scope.add(name);
-      if (!scope.parent) {
+    
+      if (!scope.parent) {      
         // 标记顶级变量
         statement._defines[name] = true;
+        // console.log(statement._defines);
       }
+      // console.log(scope.parent);
     }
     Object.defineProperties(statement, {
       _defines: { value: {} }, //当前statement语法树节点声明了哪些变量
@@ -43,9 +47,9 @@ function analyse(ast: AstNode, magicString: MagicString, bundle: Module) {
               });
               break;
             case "VariableDeclaration":
-              node.declarations.forEach((declaration: any) =>
-                addToScope(declaration.id.name)
-              );
+              node.declarations.forEach((declaration: any) => {
+                addToScope(declaration.id.name);
+              });
               break;
           }
           if (newScope) {
@@ -54,8 +58,15 @@ function analyse(ast: AstNode, magicString: MagicString, bundle: Module) {
           }
         },
         leave(node, parent) {
+          // if (node.type == "VariableDeclaration"){
+          //   console.log(scope);
+          // }
+          console.log(scope);
+          
           if (parent._scope) {
-            scope = parent._scope;
+              scope = parent._scope;
+          }else{
+             scope =  onescope;
           }
         },
       });
@@ -68,8 +79,8 @@ function analyse(ast: AstNode, magicString: MagicString, bundle: Module) {
               let currentScope = node._scope || scope;
               let definingScope = currentScope.findDefiningScope(node.name);
               if (!definingScope) {
-                // console.log(statement._dependsOn);
                 //找这个statement依赖了哪些外部变量
+                // console.log(statement);
                 if (statement._dependsOn){
                   statement._dependsOn[node.name] = true;
                 }            
